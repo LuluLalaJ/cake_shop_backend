@@ -2,6 +2,7 @@
 
 # Remote library imports
 from flask import Flask
+from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
@@ -11,7 +12,9 @@ from sqlalchemy import MetaData
 # Local imports
 
 # Instantiate app, set attributes
+# To-do: 1) figure out secret_key 2) figure out .gitignore
 app = Flask(__name__)
+app.secret_key = "BAD_SECRET_KEY"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
@@ -29,3 +32,5 @@ api = Api(app)
 
 # Instantiate CORS
 CORS(app)
+
+bcrypt = Bcrypt(app)
