@@ -48,13 +48,14 @@ def create_cakes():
     'Great British Baking Show Cake',
     'Princess Cake',
     'Holiday Cake',
-    'Cup Cake']
+    'Cup Cake',
+    'Cheese Cake']
 
     for i in range(len(cake_names)):
         cake = Cake(
             name=cake_names[i],
             price=randint(20, 50),
-            description=fake.paragraph(nb_sentence=10),
+            description=fake.paragraph(nb_sentences=10),
             image=fake.image_url()
         )
         cakes.append(cake)
@@ -63,16 +64,56 @@ def create_cakes():
     db.session.commit()
 
 def create_reviews():
-    pass
+    reviews = []
+    for i in range(30):
+        review = Review(
+            cake_id = randint(1,11),
+            user_id = randint(1,11),
+            content = fake.paragraph(nb_sentences=10)
+        )
+        reviews.append(review)
+
+    db.session.add_all(reviews)
+    db.session.commit()
 
 def create_favorites():
-    pass
+    favs = []
+    for i in range(10):
+        fav = FavoriteCake(
+            cake_id = randint(1, 11),
+            user_id = randint(1, 11)
+        )
+        favs.append(fav)
+    db.session.add_all(favs)
+    db.session.commit()
 
 def create_orders():
-    pass
+    orders = []
+    for i in range(10):
+        order = Order(
+            user_id = randint(1,11)
+        )
+        orders.append(order)
+        db.session.add_all(orders)
+        db.session.commit()
 
 def create_order_cakes():
-    pass
+    order_cakes = []
+    for i in range(50):
+        oc = OrderCake(
+            quantity = randint(1, 6),
+            order_id = randint(1, 11),
+            cake_id = randint(1, 11)
+        )
+        db.session.add(oc)
+        db.session.commit()
+        oc.price = oc.quantity * oc.cake.price
+        db.session.add(oc)
+        db.session.commit()
+
+    # db.session.add_all(order_cakes)
+
+    # db.session.commit()
 
 
 if __name__ == '__main__':
@@ -85,3 +126,11 @@ if __name__ == '__main__':
         FavoriteCake.query.delete()
         Order.query.delete()
         OrderCake.query.delete()
+
+
+        create_users()
+        create_cakes()
+        create_reviews()
+        create_favorites()
+        create_orders()
+        create_order_cakes()

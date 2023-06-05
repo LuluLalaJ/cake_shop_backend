@@ -66,7 +66,7 @@ class Cake(db.Model, SerializerMixin):
 
     @validates('description')
     def check_length(self, key, description):
-        if description >= 250:
+        if len(description) >= 50:
             return description
         raise ValueError('Description needs to be longer than 250 chars')
 
@@ -108,6 +108,8 @@ class FavoriteCake(db.Model, SerializerMixin):
     #Relationships:
     user = db.relationship('User', back_populates="favorite_cakes")
     cake = db.relationship('Cake', back_populates="favorite_cakes")
+
+    #MAYBE NEED TO ADD SOME VALIDATIONS
 
     def __repr__(self):
         return f'<FavoriteCake: {self.id} {self.cake.name}>'
@@ -158,15 +160,19 @@ class OrderCake(db.Model, SerializerMixin):
     order = db.relationship('Order', back_populates="order_cakes")
     cake = db.relationship('Cake', back_populates="order_cakes")
 
-
     @property
     def price(self):
         return self._price
 
     #need to double check here
     @price.setter
-    def price(self):
-        self._price = self.quantity * self.cake.price
+    def price(self, val):
+        self._price = val
+
+    # @property
+    # def calculate_price(self):
+    #     self.price = self.quantity * self.cake.price
+    #     return self.price
 
     def __repr__(self):
         return f'<OrderCake: {self.id}>'
