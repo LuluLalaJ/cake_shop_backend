@@ -112,9 +112,7 @@ class FavoritesById(Resource):
         if session.get('user_id'):
             user_id = session['user_id']
             favorite = FavoriteCake.query.filter_by(id=id, user_id=user_id).first()
-            if favorite:
-                return favorite.to_dict(rules=('-cake.reviews','-cake.order_cakes', '-user')), 200
-            return {'error': 'favorite cake is not found'}, 404
+            favorite.to_dict(rules=('-cake.reviews','-cake.order_cakes', '-user')), 200
         return {'error': '401 Unauthorized'}, 401
 
 
@@ -130,12 +128,30 @@ class FavoritesById(Resource):
                 return {'error': 'favorite cake is not found'}, 404
         return {'error': '401 Unauthorized'}, 401
 
-class Order(Resource):
-    pass
+class Orders(Resource):
+    def get(self):
+        if session.get('user_id'):
+            user_id = session['user_id']
+            orders = Order.query.filter_by(user_id=user_id).all()
+            orders_serialized = [order.to_dict(only=("id", "created_at", "total_price", "cakes")) for order in orders]
+            #rules=("-cake.reviews", "-user.reviews", "-order_cakes.cake")
+            return orders_serialized, 200
+        return {'error': '401 Unauthorized'}, 401
 
+    def post(self):
+        if session.get('user_id'):
+            pass
+        return {'error': '401 Unauthorized'}, 401
 
-
-
+class OrdersById(Resource):
+    def get(self,id):
+        if session.get('user_id'):
+            pass
+        return {'error': '401 Unauthorized'}, 401
+    def delete(self,id):
+        if session.get('user_id'):
+            pass
+        return {'error': '401 Unauthorized'}, 401
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
@@ -145,7 +161,8 @@ api.add_resource(Cakes, '/cakes', endpoint='cakes')
 api.add_resource(CakesById, '/cakes/<int:id>', endpoint='/cakes/<int:id>')
 api.add_resource(Favorites, '/favorites', endpoint='favorites')
 api.add_resource(FavoritesById, '/favorites/<int:id>', endpoint='/favorites/<int:id>')
-
+api.add_resource(Orders, '/orders', endpoint='orders')
+api.add_resource(OrdersById, '/orders/<int:id>', endpoint='/orders/<int:id>')
 
 
 if __name__ == '__main__':
