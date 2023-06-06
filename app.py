@@ -135,25 +135,50 @@ class Orders(Resource):
         if session.get('user_id'):
             user_id = session['user_id']
             orders = Order.query.filter_by(user_id=user_id).all()
-            orders_serialized = [order.to_dict(only=("id", "created_at", "total_price", "cakes")) for order in orders]
+            orders_serialized = [order.to_dict(only=("id", "created_at", "total_price", "cakes.name")) for order in orders]
             #rules=("-cake.reviews", "-user.reviews", "-order_cakes.cake")
             return orders_serialized, 200
         return {'error': '401 Unauthorized'}, 401
 
-    def post(self):
-        if session.get('user_id'):
-            pass
-        return {'error': '401 Unauthorized'}, 401
+    # def post(self):
+    #     if session.get('user_id'):
+    #         ordercakes = Order.query.get(Order.order_cakes).all()
+    #         user_id = session['user_id'] 
+    #             if :
+    #                 new_order = Order (
+    #                     total_price = ordercakes.quantity * ordercakes.cake.price,
+    #                     user_id = user_id
+    #                 )
+    #                 db.session.add(new_order)
+    #                 db.session.commit()
+    #                 #Adjust return values according to the front-end needs?
+    #                 return new_order.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 201
+    #             else:
+    #                 return {'error': "Order does not exist."}, 422
+            
+    #     return {'error' : '401 Unauthorized'}, 401
+            
+
 
 class OrdersById(Resource):
     def get(self,id):
         if session.get('user_id'):
-            pass
+            order = Order.query.filter_by(id=id, user_id=session['user_id']).first()
+            if order:
+                return order.to_dict(only = ('id', 'total_price', 'user.username', 'order_cakes')), 200
+            else:
+                return {'error' : 'Order not found'}, 404
         return {'error': '401 Unauthorized'}, 401
+    
     def delete(self,id):
         if session.get('user_id'):
-            pass
-        return {'error': '401 Unauthorized'}, 401
+            order = Order.query.filter_by(id=id, user_id=session['user_id']).first()
+            if order:
+                db.session.delete(order)
+                db.session.commit()
+                return {}, 204
+            return {'error' : 'Order not found'}, 404
+        return {'error' : '401 Unauthorized'}, 401
 
 
 class Reviews(Resource):
