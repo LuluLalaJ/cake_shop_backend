@@ -112,7 +112,9 @@ class FavoritesById(Resource):
         if session.get('user_id'):
             user_id = session['user_id']
             favorite = FavoriteCake.query.filter_by(id=id, user_id=user_id).first()
-            favorite.to_dict(rules=('-cake.reviews','-cake.order_cakes', '-user')), 200
+            if favorite:
+                return favorite.to_dict(rules=('-cake.reviews','-cake.order_cakes', '-user')), 200
+            return {'error': "Favorite cake not found"}, 404
         return {'error': '401 Unauthorized'}, 401
 
 
@@ -164,16 +166,22 @@ class Reviews(Resource):
     def post(self):
         if session.get('user_id'):
                 cake_id = request.get_json()['cake_id']
+                user_id = session['user_id']
                 cake = Cake.query.filter_by(id = cake_id).first()
+                # add validation here later!!!
+                # orders_by_user = Order.query.filter_by(user_id=user_id).all()
+                # order_cakes = [order.order_cakes for order in orders_by_user]
+                # boughtbefore = OrderCake.query.filter_by()
                 if cake:
                     new_review = Review(
                         content = request.get_json()['content'],
-                        user_id = session['user_id'],
+                        user_id = user_id,
                         cake_id = request.get_json()['cake_id']
                     )
                     db.session.add(new_review)
                     db.session.commit()
-                    return new_review.to_dict(), 201
+                    #Adjust return values according to the front-end needs?
+                    return new_review.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 201
                 else:
                     return {'error': "Cake does not exist."}, 422
         return {'error' : '401 Unauthorized'}, 401
@@ -182,34 +190,32 @@ class ReviewsById(Resource):
     def get(self, id):
         review = Review.query.filter_by(id=id).first()
         if review:
-            return review.to_dict(only=('id', 'content', 'user', 'cake')), 200
+            return review.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 200
         return {'error' : 'Review not found'}, 404
 
 
     def patch(self,id):
         if session.get('user_id'):
-            review = Review.query.filter_by(id=id).first()
+            review = Review.query.filter_by(id=id, user_id=session['user_id']).first()
             if review:
                 for attr in request.get_json():
                     setattr(review, attr, request.json[attr])
                 db.session.add(review)
                 db.session.commit()
-                return review.to_dict(), 200
+                return review.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 200
             return {'error' : 'Review not found'}, 404
 
         return {'error' : '401 Unauthorized'}, 401
 
     def delete(self,id):
         if session.get('user_id'):
-            review = Review.query.filter_by(id=id).first()
+            review = Review.query.filter_by(id=id, user_id=session['user_id']).first()
             if review:
                 db.session.delete(review)
                 db.session.commit()
-                return {'message': 'record successfully deleted'}, 204
+                return {}, 204
             return {'error' : 'Review not found'}, 404
         return {'error' : '401 Unauthorized'}, 401
-
-
 
 
 api.add_resource(Signup, '/signup', endpoint='signup')
