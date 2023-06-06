@@ -52,7 +52,13 @@ class User(db.Model, SerializerMixin):
 class Cake(db.Model, SerializerMixin):
     __tablename__ = "cakes"
 
-    serialize_rules = ("-users.cakes", "-reviews.cake", "-favorite_cakes.cake", "-order_cakes.cake", "-orders.cakes", )
+    serialize_rules = ("-users.cakes",
+                       "-reviews.cake",
+                       "-favorite_cakes.cake",
+                       "-order_cakes.cake",
+                       "-orders.cakes",
+                       "-reviews.user"
+                       )
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, nullable=False)

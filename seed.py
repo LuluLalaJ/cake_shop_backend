@@ -110,8 +110,7 @@ def create_order_cakes():
             order_id = randint(1, 10),
             cake_id = randint(1, 10)
         )
-
-        #too many commits?
+        #too many commits? flushing
         db.session.add(oc)
         db.session.commit()
         oc.price = oc.quantity * oc.cake.price

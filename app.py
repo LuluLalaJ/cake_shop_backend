@@ -11,14 +11,6 @@ from sqlalchemy.exc import IntegrityError
 from config import app, db, api
 from models import db, User, Cake, Review, FavoriteCake, Order, OrderCake
 
-@app.before_request
-def check_if_logged_in():
-    if not session.get('user_id') \
-        and request.endpoint != 'signup' \
-        and request.endpoint != 'login':
-        return {'error': '401 Unauthorized'}, 401
-
-#endpoints for everyone
 class Signup(Resource):
     def post(self):
         user_input = request.get_json()
@@ -50,6 +42,7 @@ class CheckSession(Resource):
         if session.get('user_id'):
             user = User.query.filter_by(id=session['user_id']).first()
             return user.to_dict(), 200
+        return {'error': '401 Unauthorized'}, 401
 
 class Login(Resource):
     def post(self):
@@ -72,11 +65,32 @@ class Logout(Resource):
         if session.get('user_id'):
             session['user_id'] = None
             return {}, 204
+        return {'error': '401 Unauthorized'}, 401
+
+class Cakes(Resource):
+    def get(self):
+        cakes = Cake.query.all()
+        cakes_serialized = [cake.to_dict(only=("id", "name", "price", "description", "image", "reviews")) for cake in cakes]
+        return cakes_serialized, 200
+
+class CakesById(Resource):
+    def get(self, id):
+        cake = Cake.query.filter_by(id=id).first()
+        if cake:
+            return cake.to_dict(only=("id", "name", "price", "description", "image", "reviews")), 200
+        return {'error': 'Cake not found'}, 404
+
+class Order(Resource):
+    pass
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 api.add_resource(Login, '/login', endpoint='login')
 api.add_resource(Logout, '/logout', endpoint='logout')
+api.add_resource(Cakes, '/cakes', endpoint='cakes')
+api.add_resource(CakesById, '/cakes/<int:id>', endpoint='/cakes/<int:id>')
+
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
