@@ -140,23 +140,27 @@ class Orders(Resource):
             return orders_serialized, 200
         return {'error': '401 Unauthorized'}, 401
 
-    # def post(self):
-    #     if session.get('user_id'):
-    #         ordercakes = Order.query.get(Order.order_cakes).all()
-    #         user_id = session['user_id'] 
-    #             if :
-    #                 new_order = Order (
-    #                     total_price = ordercakes.quantity * ordercakes.cake.price,
-    #                     user_id = user_id
-    #                 )
-    #                 db.session.add(new_order)
-    #                 db.session.commit()
-    #                 #Adjust return values according to the front-end needs?
-    #                 return new_order.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 201
-    #             else:
-    #                 return {'error': "Order does not exist."}, 422
+    def post(self):
+        if session.get('user_id'):
+            user_id = session['user_id'] 
+            order_cakes = OrderCake(
+                
+            )
+            new_order = Order (
+                total_price = ordercakes.quantity * ordercakes.cake.price,
+                user_id = user_id,
+                order_cakes = OrderCake(
+                
+                )
+            )
+            db.session.add(new_order)
+            db.session.commit()
+            #Adjust return values according to the front-end needs?
+            return new_order.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 201
+                else:
+                    return {'error': "Order does not exist."}, 422
             
-    #     return {'error' : '401 Unauthorized'}, 401
+        return {'error' : '401 Unauthorized'}, 401
             
 
 
