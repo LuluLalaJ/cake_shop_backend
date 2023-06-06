@@ -212,65 +212,6 @@ class ReviewsById(Resource):
 
 
 
-
-class Reviews(Resource):
-    def get(self):
-        reviews = Review.query.all()
-        reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name')) for review in reviews]
-        return reviews_serialized, 200
-
-
-    def post(self):
-        if session.get('user_id'):
-                cake_id = request.get_json()['cake_id']
-                cake = Cake.query.filter_by(id = cake_id).first()
-                if cake:
-                    new_review = Review(
-                        content = request.get_json()['content'],
-                        user_id = session['user_id'],
-                        cake_id = request.get_json()['cake_id']
-                    )
-                    db.session.add(new_review)
-                    db.session.commit()
-                    return new_review.to_dict(), 201
-                else:
-                    return {'error': "Cake does not exist."}, 422
-        return {'error' : '401 Unauthorized'}, 401
-
-class ReviewsById(Resource):
-    def get(self, id):
-        review = Review.query.filter_by(id=id).first()
-        if review:
-            return review.to_dict(only=('id', 'content', 'user', 'cake')), 200
-        return {'error' : 'Review not found'}, 404
-
-
-    def patch(self,id):
-        if session.get('user_id'):
-            review = Review.query.filter_by(id=id).first()
-            if review:
-                for attr in request.get_json():
-                    setattr(review, attr, request.json[attr])
-                db.session.add(review)
-                db.session.commit()
-                return review.to_dict(), 200
-            return {'error' : 'Review not found'}, 404
-
-        return {'error' : '401 Unauthorized'}, 401
-
-    def delete(self,id):
-        if session.get('user_id'):
-            review = Review.query.filter_by(id=id).first()
-            if review:
-                db.session.delete(review)
-                db.session.commit()
-                return {'message': 'record successfully deleted'}, 204
-            return {'error' : 'Review not found'}, 404
-        return {'error' : '401 Unauthorized'}, 401
-
-
-
-
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 api.add_resource(Login, '/login', endpoint='login')
