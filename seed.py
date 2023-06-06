@@ -80,8 +80,8 @@ def create_favorites():
     favs = []
     for i in range(10):
         fav = FavoriteCake(
-            cake_id = randint(1, 11),
-            user_id = randint(1, 11)
+            cake_id = randint(1, 10),
+            user_id = randint(1, 10)
         )
         favs.append(fav)
     db.session.add_all(favs)
@@ -91,30 +91,38 @@ def create_orders():
     orders = []
     for i in range(10):
         order = Order(
-            user_id = randint(1,11)
+            user_id = randint(1,10)
         )
         orders.append(order)
-        db.session.add_all(orders)
-        db.session.commit()
+        # db.session.add(order)
+        # db.session.commit()
+        # order.total_price = sum([oc.price for oc in order.order_cakes])
+        # db.session.add(order)
+        # db.session.commit()
+    db.session.add_all(orders)
+    db.session.commit()
+    return orders
 
 def create_order_cakes():
-    order_cakes = []
     for i in range(50):
         oc = OrderCake(
-            quantity = randint(1, 6),
-            order_id = randint(1, 11),
-            cake_id = randint(1, 11)
+            quantity = randint(1, 5),
+            order_id = randint(1, 10),
+            cake_id = randint(1, 10)
         )
+
+        #too many commits?
         db.session.add(oc)
         db.session.commit()
         oc.price = oc.quantity * oc.cake.price
         db.session.add(oc)
         db.session.commit()
 
-    # db.session.add_all(order_cakes)
-
-    # db.session.commit()
-
+def update_orders_total_price(orders):
+    for order in orders:
+        order.total_price = sum([oc.price for oc in order.order_cakes])
+        db.session.add(order)
+        db.session.commit()
 
 if __name__ == '__main__':
 
@@ -132,5 +140,6 @@ if __name__ == '__main__':
         create_cakes()
         create_reviews()
         create_favorites()
-        create_orders()
+        orders = create_orders()
         create_order_cakes()
+        update_orders_total_price(orders)

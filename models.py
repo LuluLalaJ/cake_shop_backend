@@ -122,8 +122,7 @@ class Order(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     #figure out how to calculate this automatically
-    _total_price = db.Column(db.Numeric(8, 2), default=0)
-
+    total_price = db.Column(db.Numeric(8, 2), default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     #Relationships:
@@ -132,15 +131,6 @@ class Order(db.Model, SerializerMixin):
 
     #Associatio_proxy:
     cakes = association_proxy('order_cakes', 'cake', creator=lambda cake_obj: OrderCake(cake=cake_obj))
-
-    @property
-    def total_price(self):
-        return self._total_price
-
-    #need to double check here
-    @total_price.setter
-    def total_price(self):
-        self._total_price = sum([oc.price for oc in self.order_cakes])
 
     def __repr__(self):
         return f'<Order: {self.id}>'
@@ -152,27 +142,15 @@ class OrderCake(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, default=0)
+
+    price = db.Column(db.Numeric(8, 2), default=0)
+
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'))
     cake_id = db.Column(db.Integer, db.ForeignKey('cakes.id'))
-    _price = db.Column(db.Numeric(8, 2), default=0)
 
     #Relationships:
     order = db.relationship('Order', back_populates="order_cakes")
     cake = db.relationship('Cake', back_populates="order_cakes")
-
-    @property
-    def price(self):
-        return self._price
-
-    #need to double check here
-    @price.setter
-    def price(self, val):
-        self._price = val
-
-    # @property
-    # def calculate_price(self):
-    #     self.price = self.quantity * self.cake.price
-    #     return self.price
 
     def __repr__(self):
         return f'<OrderCake: {self.id}>'
