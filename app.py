@@ -86,11 +86,10 @@ class Order(Resource):
 
 class Reviews(Resource):
     def get(self):
-        if session.get('user_id'):
-            reviews = Review.query.all()
-            reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name')) for review in reviews]
-            return reviews_serialized, 200
-        return {'error' : '401 Unauthorized'}, 401
+        reviews = Review.query.all()
+        reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name')) for review in reviews]
+        return reviews_serialized, 200
+
 
     def post(self):
         if session.get('user_id'):
@@ -111,12 +110,11 @@ class Reviews(Resource):
 
 class ReviewsById(Resource):
     def get(self, id):
-        if session.get('user_id'):
-            review = Review.query.filter_by(id=id).first()
-            if review:
-                return review.to_dict(only=('id', 'content', 'user', 'cake')), 200
-            return {'error' : 'Review not found'}, 404
-        return {'error' : '401 Unauthorized'}, 401
+        review = Review.query.filter_by(id=id).first()
+        if review:
+            return review.to_dict(only=('id', 'content', 'user', 'cake')), 200
+        return {'error' : 'Review not found'}, 404
+    
     
     def patch(self,id):
         if session.get('user_id'):
