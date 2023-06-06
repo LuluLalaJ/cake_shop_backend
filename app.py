@@ -83,12 +83,46 @@ class CakesById(Resource):
 class Order(Resource):
     pass
 
+
+class Reviews(Resource):
+    def get(self):
+        reviews = Review.query.all()
+        reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name')) for review in reviews]
+        return reviews_serialized, 200
+
+    def post(self):
+        if session.get('user_id'):
+                cake_id = request.get_json()['cake_id']
+                cake = Cake.query.filter_by(id = cake_id).first()
+                if cake:
+                    new_review = Review(
+                        content = request.get_json()['content'],
+                        user_id = session['user_id'],
+                        cake_id = request.get_json()['cake_id']
+                    )
+                    db.session.add(new_review)
+                    db.session.commit()
+                    return new_review.to_dict(), 201
+                else: 
+                    return {'error': "Cake does not exist."}, 422
+        return {'error' : '401 Unauthorized'}, 401
+
+class ReviewsById(Resource):
+    def get(self, id):
+        review = Review.query.filter_by(id=id).first()
+        if review:
+            return review.to_dict(only=('id', 'content', 'user', 'cake')), 200
+        return {'error' : 'Review not found'}, 404
+    
+    
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 api.add_resource(Login, '/login', endpoint='login')
 api.add_resource(Logout, '/logout', endpoint='logout')
 api.add_resource(Cakes, '/cakes', endpoint='cakes')
 api.add_resource(CakesById, '/cakes/<int:id>', endpoint='/cakes/<int:id>')
+api.add_resource(Reviews, '/reviews', endpoint = '/reviews')
+api.add_resource(ReviewsById, '/reviews/<int:id>', endpoint = '/reviews/<int:id>')
 
 
 
