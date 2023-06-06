@@ -67,8 +67,8 @@ def create_reviews():
     reviews = []
     for i in range(30):
         review = Review(
-            cake_id = randint(1,11),
-            user_id = randint(1,11),
+            cake_id = randint(1,10),
+            user_id = randint(1,10),
             content = fake.paragraph(nb_sentences=10)
         )
         reviews.append(review)

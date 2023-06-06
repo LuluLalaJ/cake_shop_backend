@@ -9,8 +9,14 @@ from config import db, bcrypt
 class User(db.Model, SerializerMixin):
     __tablename__ = "users"
 
-    #Serialize_rules
-    serialize_rules = ("-cakes.users", "-reviews.user", "-favorite_cakes.user", "-orders.user",)
+    #Serialize_rules --> this is a lot more complicated than I thought
+    serialize_rules = ("-cakes.users",
+                       "-reviews.user",
+                       "-favorite_cakes.user",
+                       "-orders.user",
+                       "-reviews.cake",
+                       "-favorite_cakes.cake",
+                       "-orders.order_cakes")
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
