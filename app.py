@@ -109,10 +109,37 @@ class Reviews(Resource):
 
 class ReviewsById(Resource):
     def get(self, id):
-        review = Review.query.filter_by(id=id).first()
-        if review:
-            return review.to_dict(only=('id', 'content', 'user', 'cake')), 200
-        return {'error' : 'Review not found'}, 404
+        if session.get('user_id'):
+            review = Review.query.filter_by(id=id).first()
+            if review:
+                return review.to_dict(only=('id', 'content', 'user', 'cake')), 200
+            return {'error' : 'Review not found'}, 404
+        return {'error' : '401 Unauthorized'}, 401
+    
+    def patch(self,id):
+        if session.get('user_id'):
+            review = Review.query.filter_by(id=id).first()
+            if review:
+                for attr in request.get_json():
+                    setattr(review, attr, request.json[attr])
+                db.session.add(review)
+                db.session.commit()
+                return review.to_dict(), 200
+            return {'error' : 'Review not found'}, 404
+        
+        return {'error' : '401 Unauthorized'}, 401
+    
+    def delete(self,id):
+        if session.get('user_id'):
+            review = Review.query.filter_by(id=id).first()
+            if review:
+                db.session.delete(review)
+                db.session.commit()
+                return {'message': 'record successfully deleted'}, 204
+            return {'error' : 'Review not found'}, 404
+        return {'error' : '401 Unauthorized'}, 401
+            
+
     
     
 api.add_resource(Signup, '/signup', endpoint='signup')
