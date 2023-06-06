@@ -86,9 +86,11 @@ class Order(Resource):
 
 class Reviews(Resource):
     def get(self):
-        reviews = Review.query.all()
-        reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name')) for review in reviews]
-        return reviews_serialized, 200
+        if session.get('user_id'):
+            reviews = Review.query.all()
+            reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name')) for review in reviews]
+            return reviews_serialized, 200
+        return {'error' : '401 Unauthorized'}, 401
 
     def post(self):
         if session.get('user_id'):
