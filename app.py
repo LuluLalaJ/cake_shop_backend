@@ -135,33 +135,50 @@ class Orders(Resource):
         if session.get('user_id'):
             user_id = session['user_id']
             orders = Order.query.filter_by(user_id=user_id).all()
-            orders_serialized = [order.to_dict(only=("id", "created_at", "total_price", "cakes.name")) for order in orders]
-            #rules=("-cake.reviews", "-user.reviews", "-order_cakes.cake")
+            orders_serialized = [order.to_dict(only=('id', 'total_price', 'created_at', 'user.username',
+                                             'order_cakes.quantity', 'order_cakes.price',
+                                             'order_cakes.cake.name', 'order_cakes.cake.price',
+                                             'order_cakes.cake.image')) for order in orders]
             return orders_serialized, 200
         return {'error': '401 Unauthorized'}, 401
 
     def post(self):
         if session.get('user_id'):
-            user_id = session['user_id'] 
-            order_cakes = OrderCake(
-                
+            user_id = session['user_id']
+            new_order = Order(
+                user_id = user_id
             )
-            new_order = Order (
-                total_price = ordercakes.quantity * ordercakes.cake.price,
-                user_id = user_id,
-                order_cakes = OrderCake(
-                
-                )
-            )
-            db.session.add(new_order)
-            db.session.commit()
-            #Adjust return values according to the front-end needs?
-            return new_order.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 201
-                else:
-                    return {'error': "Order does not exist."}, 422
-            
-        return {'error' : '401 Unauthorized'}, 401
-            
+            try:
+                db.session.add(new_order)
+                db.session.commit()
+
+                order_id = new_order.id
+                cakes = request.get_json()
+                for cake in cakes:
+                    cake_id = cake['cake_id']
+                    quantity = cake['quantity']
+                    new_order_cake = OrderCake(
+                        quantity=quantity,
+                        order_id=order_id,
+                        cake_id=cake_id,
+                    )
+                    db.session.add(new_order_cake)
+                    db.session.commit()
+                    new_order_cake.price = quantity * new_order_cake.cake.price
+                    db.session.add(new_order_cake)
+                    db.session.commit()
+
+                new_order.total_price = sum([oc.price for oc in new_order.order_cakes])
+                db.session.add(new_order)
+                db.session.commit()
+
+                return new_order.to_dict(only = ('id', 'total_price', 'created_at', 'user.username',
+                                             'order_cakes.quantity', 'order_cakes.price',
+                                             'order_cakes.cake.name', 'order_cakes.cake.price',
+                                             'order_cakes.cake.image')), 201
+            except:
+                return {'error': 'The order could not be created'}, 422
+        return {'error': '401 Unauthorized'}, 401
 
 
 class OrdersById(Resource):
@@ -169,21 +186,23 @@ class OrdersById(Resource):
         if session.get('user_id'):
             order = Order.query.filter_by(id=id, user_id=session['user_id']).first()
             if order:
-                return order.to_dict(only = ('id', 'total_price', 'user.username', 'order_cakes')), 200
+                return order.to_dict(only = ('id', 'total_price', 'created_at', 'user.username',
+                                             'order_cakes.quantity', 'order_cakes.price',
+                                             'order_cakes.cake.name', 'order_cakes.cake.price',
+                                             'order_cakes.cake.image')), 200
             else:
                 return {'error' : 'Order not found'}, 404
         return {'error': '401 Unauthorized'}, 401
-    
-    def delete(self,id):
-        if session.get('user_id'):
-            order = Order.query.filter_by(id=id, user_id=session['user_id']).first()
-            if order:
-                db.session.delete(order)
-                db.session.commit()
-                return {}, 204
-            return {'error' : 'Order not found'}, 404
-        return {'error' : '401 Unauthorized'}, 401
 
+    # def delete(self,id):
+    #     if session.get('user_id'):
+    #         order = Order.query.filter_by(id=id, user_id=session['user_id']).first()
+    #         if order:
+    #             db.session.delete(order)
+    #             db.session.commit()
+    #             return {}, 204
+    #         return {'error' : 'Order not found'}, 404
+    #     return {'error' : '401 Unauthorized'}, 401
 
 class Reviews(Resource):
     def get(self):
