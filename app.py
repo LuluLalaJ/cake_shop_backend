@@ -194,23 +194,23 @@ class OrdersById(Resource):
                 return {'error' : 'Order not found'}, 404
         return {'error': '401 Unauthorized'}, 401
 
-    # def delete(self,id):
-    #     if session.get('user_id'):
-    #         order = Order.query.filter_by(id=id, user_id=session['user_id']).first()
-    #         if order:
-    #             db.session.delete(order)
-    #             db.session.commit()
-    #             return {}, 204
-    #         return {'error' : 'Order not found'}, 404
-    #     return {'error' : '401 Unauthorized'}, 401
+    def delete(self,id):
+        if session.get('user_id'):
+            order = Order.query.filter_by(id=id, user_id=session['user_id']).first()
+            if order:
+                db.session.delete(order)
+                db.session.commit()
+                return {}, 204
+            return {'error' : 'Order not found'}, 404
+        return {'error' : '401 Unauthorized'}, 401
 
 class Reviews(Resource):
     def get(self):
         reviews = Review.query.all()
-        reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name')) for review in reviews]
+        reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at')) for review in reviews]
         return reviews_serialized, 200
 
-
+    #NEED VALIDATION SO THAT THE USER DON'T POST TWICE ON THE SAME CAKE?
     def post(self):
         if session.get('user_id'):
                 cake_id = request.get_json()['cake_id']
@@ -229,7 +229,7 @@ class Reviews(Resource):
                     db.session.add(new_review)
                     db.session.commit()
                     #Adjust return values according to the front-end needs?
-                    return new_review.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 201
+                    return new_review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at')), 201
                 else:
                     return {'error': "Cake does not exist."}, 422
         return {'error' : '401 Unauthorized'}, 401
@@ -238,7 +238,7 @@ class ReviewsById(Resource):
     def get(self, id):
         review = Review.query.filter_by(id=id).first()
         if review:
-            return review.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 200
+            return review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at')), 200
         return {'error' : 'Review not found'}, 404
 
 
@@ -250,7 +250,7 @@ class ReviewsById(Resource):
                     setattr(review, attr, request.json[attr])
                 db.session.add(review)
                 db.session.commit()
-                return review.to_dict(only=('id', 'content', 'user.username', 'cake.name')), 200
+                return review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at')), 200
             return {'error' : 'Review not found'}, 404
 
         return {'error' : '401 Unauthorized'}, 401
@@ -270,7 +270,7 @@ class ReviewsByCakeId(Resource):
         reviews = Review.query.filter_by(cake_id=id).all()
         if reviews:
             reviews_serialized = [
-                review.to_dict(only=('id', 'content', 'user.username', 'cake.name'))
+                review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at'))
                 for review in reviews
             ]
             return reviews_serialized, 200
@@ -285,12 +285,25 @@ class OrdersByUserId(Resource):
                     order.to_dict(only = ('id', 'total_price', 'created_at', 'user.username',
                                              'order_cakes.quantity', 'order_cakes.price',
                                              'order_cakes.cake.name', 'order_cakes.cake.price',
-                                             'order_cakes.cake.image'))
+                                             'order_cakes.cake.image', 'order_cakes.cake.id'))
                     for order in orders
                 ]
                 return orders_serialized, 200
             else:
                 return {'error' : 'Orders not found'}, 404
+        return {'error': '401 Unauthorized'}, 401
+
+class ReviewsByUserId(Resource):
+    def get(self, id):
+        if session.get('user_id'):
+            reviews = Review.query.filter_by(user_id=id).all()
+            if reviews:
+                reviews_serialized = [
+                    review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at'))
+                    for review in reviews
+                ]
+                return reviews_serialized, 200
+            return {'error' : 'Reviews not found'}, 404
         return {'error': '401 Unauthorized'}, 401
 
 api.add_resource(Signup, '/signup', endpoint='signup')
@@ -307,8 +320,8 @@ api.add_resource(Orders, '/orders', endpoint='orders')
 api.add_resource(OrdersById, '/orders/<int:id>', endpoint='/orders/<int:id>')
 #need to understand the convention of url better
 api.add_resource(ReviewsByCakeId, '/cakes/reviews/<int:id>', endpoint='/cakes/reviews/<int:id>')
-api.add_resource(OrdersByUserId, '/cakes/orders/<int:id>', endpoint='/cakes/orders/<int:id>')
-
+api.add_resource(OrdersByUserId, '/users/orders/<int:id>', endpoint='/users/orders/<int:id>')
+api.add_resource(ReviewsByUserId, '/users/reviews/<int:id>', endpoint='/users/reviews/<int:id>')
 
 
 if __name__ == '__main__':
