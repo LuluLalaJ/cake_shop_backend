@@ -265,6 +265,17 @@ class ReviewsById(Resource):
             return {'error' : 'Review not found'}, 404
         return {'error' : '401 Unauthorized'}, 401
 
+class ReviewsByCakeId(Resource):
+    def get(self, id):
+        reviews = Review.query.filter_by(cake_id=id).all()
+        if reviews:
+            reviews_serialized = [
+                review.to_dict(only=('id', 'content', 'user.username', 'cake.name'))
+                for review in reviews
+            ]
+            return reviews_serialized, 200
+        return {'error' : 'Reviews not found'}, 404
+
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
@@ -278,6 +289,8 @@ api.add_resource(Favorites, '/favorites', endpoint='favorites')
 api.add_resource(FavoritesById, '/favorites/<int:id>', endpoint='/favorites/<int:id>')
 api.add_resource(Orders, '/orders', endpoint='orders')
 api.add_resource(OrdersById, '/orders/<int:id>', endpoint='/orders/<int:id>')
+#need to understand the convention of url better
+api.add_resource(ReviewsByCakeId, '/cakes/reviews/<int:id>', endpoint='/cakes/reviews/<int:id>')
 
 
 if __name__ == '__main__':
