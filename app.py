@@ -276,6 +276,22 @@ class ReviewsByCakeId(Resource):
             return reviews_serialized, 200
         return {'error' : 'Reviews not found'}, 404
 
+class OrdersByUserId(Resource):
+    def get(self,id):
+        if session.get('user_id'):
+            orders = Order.query.filter_by(user_id=id).all()
+            if orders:
+                orders_serialized = [
+                    order.to_dict(only = ('id', 'total_price', 'created_at', 'user.username',
+                                             'order_cakes.quantity', 'order_cakes.price',
+                                             'order_cakes.cake.name', 'order_cakes.cake.price',
+                                             'order_cakes.cake.image'))
+                    for order in orders
+                ]
+                return orders_serialized, 200
+            else:
+                return {'error' : 'Orders not found'}, 404
+        return {'error': '401 Unauthorized'}, 401
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
@@ -291,6 +307,8 @@ api.add_resource(Orders, '/orders', endpoint='orders')
 api.add_resource(OrdersById, '/orders/<int:id>', endpoint='/orders/<int:id>')
 #need to understand the convention of url better
 api.add_resource(ReviewsByCakeId, '/cakes/reviews/<int:id>', endpoint='/cakes/reviews/<int:id>')
+api.add_resource(OrdersByUserId, '/cakes/orders/<int:id>', endpoint='/cakes/orders/<int:id>')
+
 
 
 if __name__ == '__main__':
