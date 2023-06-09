@@ -110,7 +110,7 @@ def create_reviews():
         review = Review(
             cake_id = randint(1,10),
             user_id = randint(1,10),
-            content = fake.paragraph(nb_sentences=10)
+            content = fake.paragraph(nb_sentences=5)
         )
         reviews.append(review)
 
@@ -130,7 +130,7 @@ def create_favorites():
 
 def create_orders():
     orders = []
-    for i in range(10):
+    for i in range(15):
         order = Order(
             user_id = randint(1,10)
         )
@@ -143,8 +143,8 @@ def create_orders():
 def create_order_cakes():
     for i in range(50):
         oc = OrderCake(
-            quantity = randint(1, 5),
-            order_id = randint(1, 10),
+            quantity = randint(1, 3),
+            order_id = randint(1, 15),
             cake_id = randint(1, 10)
         )
 
