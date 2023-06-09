@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 
-# Standard library imports
-
-# Remote library imports
 from flask import request, make_response, session
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-
-# Local imports
 from config import app, db, api
 from models import db, User, Cake, Review, FavoriteCake, Order, OrderCake
 
@@ -29,13 +24,14 @@ class Signup(Resource):
                 db.session.add(user)
                 db.session.commit()
                 session['user_id'] = user.id
-                #not sure why there's recursion error;
+                #NEED TO UNDERSTAND SERIALIZATION BETTER
                 return user.to_dict(), 201
 
             except IntegrityError:
                 return {'error': 'invalid input; username and email must be unique'}, 422
 
         return {'error': 'username, email, and password cannot be empty'}, 400
+
 
 class CheckSession(Resource):
     def get(self):
@@ -48,16 +44,12 @@ class Login(Resource):
     def post(self):
 
         user_input = request.get_json()
-
         username = user_input.get('username')
         password = user_input.get('password')
-
         user = User.query.filter_by(username=username).first()
-
         if user and user.authenticate(password):
             session['user_id'] = user.id
             return user.to_dict(), 200
-
         return {'error': '401 Unauthorized'}, 401
 
 class Logout(Resource):
@@ -210,16 +202,12 @@ class Reviews(Resource):
         reviews_serialized = [review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at')) for review in reviews]
         return reviews_serialized, 200
 
-    #NEED VALIDATION SO THAT THE USER DON'T POST TWICE ON THE SAME CAKE?
+    #NEED VALIDATION SO THAT THE USER DON'T POST TWICE ON THE SAME CAKE
     def post(self):
         if session.get('user_id'):
                 cake_id = request.get_json()['cake_id']
                 user_id = session['user_id']
                 cake = Cake.query.filter_by(id = cake_id).first()
-                # add validation here later!!!
-                # orders_by_user = Order.query.filter_by(user_id=user_id).all()
-                # order_cakes = [order.order_cakes for order in orders_by_user]
-                # boughtbefore = OrderCake.query.filter_by()
                 if cake:
                     new_review = Review(
                         content = request.get_json()['content'],
@@ -228,7 +216,6 @@ class Reviews(Resource):
                     )
                     db.session.add(new_review)
                     db.session.commit()
-                    #Adjust return values according to the front-end needs?
                     return new_review.to_dict(only=('id', 'content', 'user.username', 'cake.name', 'created_at', 'updated_at')), 201
                 else:
                     return {'error': "Cake does not exist."}, 422
@@ -318,7 +305,7 @@ api.add_resource(Favorites, '/favorites', endpoint='favorites')
 api.add_resource(FavoritesById, '/favorites/<int:id>', endpoint='/favorites/<int:id>')
 api.add_resource(Orders, '/orders', endpoint='orders')
 api.add_resource(OrdersById, '/orders/<int:id>', endpoint='/orders/<int:id>')
-#need to understand the convention of url better
+#NEED TO UNDERSTAND RESTFUL URL CONVENTION BETTER
 api.add_resource(ReviewsByCakeId, '/cakes/reviews/<int:id>', endpoint='/cakes/reviews/<int:id>')
 api.add_resource(OrdersByUserId, '/users/orders/<int:id>', endpoint='/users/orders/<int:id>')
 api.add_resource(ReviewsByUserId, '/users/reviews/<int:id>', endpoint='/users/reviews/<int:id>')

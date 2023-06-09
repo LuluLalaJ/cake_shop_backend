@@ -5,11 +5,9 @@ from sqlalchemy.ext.associationproxy import association_proxy
 
 from config import db, bcrypt
 
-# Models go here!
 class User(db.Model, SerializerMixin):
     __tablename__ = "users"
 
-    #Serialize_rules --> this is a lot more complicated than I thought
     serialize_rules = ("-cakes.users",
                        "-reviews.user",
                        "-favorite_cakes.user",
@@ -23,13 +21,10 @@ class User(db.Model, SerializerMixin):
     email = db.Column(db.String, unique=True, nullable=False)
     _password_hash = db.Column(db.String)
 
-
-    #Relationships:
     reviews = db.relationship('Review', back_populates="user", cascade="all, delete-orphan")
     favorite_cakes = db.relationship('FavoriteCake', back_populates="user", cascade="all, delete-orphan")
     orders = db.relationship('Order', back_populates="user", cascade="all, delete-orphan")
 
-    #Association_proxy:
     cakes = association_proxy('reviews', 'cake', creator=lambda cake_obj: Review(cake=cake_obj))
 
     @hybrid_property
@@ -66,15 +61,12 @@ class Cake(db.Model, SerializerMixin):
     description = db.Column(db.String, nullable=False)
     image = db.Column(db.String, nullable=False)
 
-    #Relationships:
     reviews = db.relationship('Review', back_populates="cake", cascade="all, delete-orphan")
     favorite_cakes = db.relationship('FavoriteCake', back_populates="cake", cascade="all, delete-orphan")
     order_cakes = db.relationship('OrderCake', back_populates="cake", cascade="all, delete-orphan")
 
-    #Association_proxy
     users = association_proxy('reviews', 'user', creator=lambda user_obj: Review(user=user_obj))
     orders = association_proxy('order_cakes', 'order', creator=lambda order_obj: OrderCake(order=order_obj))
-
 
     @validates('description')
     def check_length(self, key, description):
@@ -99,7 +91,6 @@ class Review(db.Model, SerializerMixin):
     cake_id = db.Column(db.Integer, db.ForeignKey('cakes.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    #Relationships:
     user = db.relationship('User', back_populates="reviews")
     cake = db.relationship('Cake', back_populates="reviews")
 
@@ -117,11 +108,8 @@ class FavoriteCake(db.Model, SerializerMixin):
     cake_id = db.Column(db.Integer, db.ForeignKey('cakes.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    #Relationships:
     user = db.relationship('User', back_populates="favorite_cakes")
     cake = db.relationship('Cake', back_populates="favorite_cakes")
-
-    #MAYBE NEED TO ADD SOME VALIDATIONS
 
     def __repr__(self):
         return f'<FavoriteCake: {self.id} {self.cake.name}>'
@@ -133,15 +121,12 @@ class Order(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
-    #figure out how to calculate this automatically
     total_price = db.Column(db.Numeric(8, 2), default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    #Relationships:
     user = db.relationship('User', back_populates="orders")
     order_cakes = db.relationship('OrderCake', back_populates="order", cascade="all, delete-orphan")
 
-    #Associatio_proxy:
     cakes = association_proxy('order_cakes', 'cake', creator=lambda cake_obj: OrderCake(cake=cake_obj))
 
     def __repr__(self):
@@ -160,7 +145,6 @@ class OrderCake(db.Model, SerializerMixin):
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'))
     cake_id = db.Column(db.Integer, db.ForeignKey('cakes.id'))
 
-    #Relationships:
     order = db.relationship('Order', back_populates="order_cakes")
     cake = db.relationship('Cake', back_populates="order_cakes")
 
