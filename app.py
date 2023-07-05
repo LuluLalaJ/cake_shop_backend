@@ -305,7 +305,6 @@ api.add_resource(Favorites, '/favorites', endpoint='favorites')
 api.add_resource(FavoritesById, '/favorites/<int:id>', endpoint='/favorites/<int:id>')
 api.add_resource(Orders, '/orders', endpoint='orders')
 api.add_resource(OrdersById, '/orders/<int:id>', endpoint='/orders/<int:id>')
-#NEED TO UNDERSTAND RESTFUL URL CONVENTION BETTER
 api.add_resource(ReviewsByCakeId, '/cakes/reviews/<int:id>', endpoint='/cakes/reviews/<int:id>')
 api.add_resource(OrdersByUserId, '/users/orders/<int:id>', endpoint='/users/orders/<int:id>')
 api.add_resource(ReviewsByUserId, '/users/reviews/<int:id>', endpoint='/users/reviews/<int:id>')
